@@ -1,0 +1,21 @@
+# Build and install Polybar
+- name: "Checking bspwm installation status."
+  shell: 'dpkg -s bspwm | grep "Status: install ok installed"'
+  register: bspwm_installed
+  ignore_errors: true
+  changed_when: false
+
+- name: "Checking bspwm installed version."
+  shell: dpkg-query --showformat='dpkg --compare-versions "${Version}" "ge" "{{ debuild_bspwm.git_branch }}"' -W bspwm | sh
+  register: bspwm_status
+  ignore_errors: true
+  when: "bspwm_installed.rc == 0"
+  changed_when: false
+
+- name: 'Building bspwm.'
+  import_tasks: bspwm.yml
+  environment:
+    GITREV: '{{ debuild_bspwm.git_branch }}'
+    GIT_URL: '{{ debuild_bspwm.git_src }}'
+  when: "bspwm_installed.rc == 1 or bspwm_status.rc != 0"
+  changed_when: false

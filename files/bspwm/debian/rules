@@ -1,0 +1,17 @@
+#!/usr/bin/make -f
+
+export PREFIX=/usr
+
+%:
+	dh $@
+
+override_dh_auto_clean:
+	dh_auto_clean
+
+	rm -rf *.o
+
+override_dh_auto_install:
+	dh_auto_install
+
+	rm -rf ${CURDIR}/debian/bspwm/usr/share/doc/bspwm/INSTALL.md
+	rm -rf ${CURDIR}/debian/bspwm/usr/share/doc/bspwm/CHANGELOG.md

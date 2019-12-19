@@ -1,0 +1,4 @@
+debuild_bspwm:
+  git_src: https://github.com/baskerville/bspwm
+  # this is the tag from the github release
+  git_branch: 0.9.9

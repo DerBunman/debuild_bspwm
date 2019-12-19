@@ -1,0 +1,68 @@
+- name: 'Checkout bspwm sources {{ debuild.build_path }}'
+  git:
+    repo: '{{ debuild_bspwm.git_src }}'
+    dest: '{{ debuild.build_path }}/bspwm'
+    version: '{{ debuild_bspwm.git_branch }}'
+    update: yes
+    clone: yes
+    force: yes
+  changed_when: false
+
+- name: 'Copy debian dir'
+  copy:
+    src: bspwm/debian
+    dest: '{{ debuild.build_path }}/bspwm'
+  changed_when: false
+
+- name: 'Generating debian/changelog'
+  command: /usr/local/bin/git_changelog.sh
+  args:
+    chdir: '{{ debuild.build_path }}/bspwm'
+  changed_when: false
+
+- name: 'Installing build deps'
+  command: >
+    mk-build-deps 
+    -i 
+    -t "apt-get -o Debug::pkgProblemResolver=yes 
+    --yes 
+    --no-install-recommends"
+  args:
+      chdir: '{{ debuild.build_path }}/bspwm'
+  changed_when: false
+
+- name: 'Building deb package'
+  command: dpkg-buildpackage -rfakeroot -uc -b
+  args:
+      chdir: '{{ debuild.build_path }}/bspwm'
+  changed_when: false
+
+- name: 'Removing build dependencies'
+  apt:
+    name: bspwm-build-deps
+    state: absent
+    autoclean: yes
+    autoremove: yes
+  changed_when: false
+
+- name: 'Determine deb name.'
+  shell: echo "$(awk '/^Package:/ { print $2 }' debian/control)_$(dpkg-parsechangelog --show-field version)_$(dpkg-architecture -qDEB_BUILD_ARCH).deb"
+  args:
+    chdir: "{{ debuild.build_path }}/bspwm"
+  register: deb
+  changed_when: false
+
+- name: 'Set deb name to {{ deb.stdout }}'
+  set_fact:
+    deb='{{ debuild.build_path }}/{{ deb.stdout | trim }}'
+  changed_when: false
+
+- name: 'Install a .deb package'
+  apt:
+    deb: '{{ deb }}'
+
+- name: 'Delete build dir'
+  file:
+    path: '{{ debuild.build_path }}'
+    state: absent
+  changed_when: false

@@ -1,0 +1,4 @@
+?package(bspwm):needs="wm" \
+	section="Window Managers" \
+	title="Bspwm" \
+	command="/usr/bin/bspwm"
